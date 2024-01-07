@@ -26,7 +26,7 @@ Add to roms/doom folder and launch with:
 ```
 
 Can also be built to run on a "regular" Linux distro by commenting out the following lines before compiling:
-'''
+```
 //    system("pkill -f gptokeyb");
 //    system("sudo kill -9 $(pidof gptokeyb)");
 //    system("kill -9 $(pidof gptokeyb)");
@@ -40,4 +40,4 @@ Can also be built to run on a "regular" Linux distro by commenting out the follo
 //        if (strcasestr(files[sourcePortSelected], gzDoomExecutable) != NULL) {
 //            snprintf(command + strlen(command), sizeof(command) - strlen(command), " +gl_es 1 +vid_preferbackend 3 ");
 //        }
-'''
+```
