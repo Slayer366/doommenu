@@ -1,5 +1,5 @@
 #CFLAGS=-c -g -Wall -pg
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -no-pie
 
 LDFLAGS=-lSDL2 -lSDL2_ttf
 
