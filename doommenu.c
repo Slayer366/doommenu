@@ -529,7 +529,7 @@ initializeMapLabels();
 
 int numMaps = MAX_EPISODES * MAX_MAPS_PER_EPISODE + MAX_D2_MAPS;
 int mapSelected = 0;
-int episode, map;
+//int episode, map;
 
 in_loop = true;
 while (in_loop) {
@@ -641,15 +641,16 @@ if (sourcePortSelected < numSourcePorts) {
         }
 
     // Display selected map
-        sscanf(mapLabels[mapSelected], "e%dm%d", &episode, &map);
-        if (episode > 0 && map > 0) {
-            printf("-warp %d %d ", episode, map);
-        } else {
-            sscanf(mapLabels[mapSelected], "MAP%02d", &map);
-            if (map > 0) {
-                printf("-warp %02d ", map);
-            }
-        }
+	printf("+map %s ", mapLabels[mapSelected]);
+//        sscanf(mapLabels[mapSelected], "e%dm%d", &episode, &map);
+//        if (episode > 0 && map > 0) {
+//            printf("-warp %d %d ", episode, map);
+//        } else {
+//            sscanf(mapLabels[mapSelected], "MAP%02d", &map);
+//            if (map > 0) {
+//                printf("-warp %02d ", map);
+//            }
+//        }
 
     // Display skill level
         if (skillSelected != -1) {
@@ -691,15 +692,16 @@ if (sourcePortSelected < numSourcePorts) {
         }
 
     // Selected Map
-        sscanf(mapLabels[mapSelected], "e%dm%d", &episode, &map);
-        if (episode > 0 && map > 0) {
-            snprintf(command + strlen(command), sizeof(command) - strlen(command), " -warp %d %d ", episode, map);
-        } else {
-            sscanf(mapLabels[mapSelected], "MAP%02d", &map);
-            if (map > 0) {
-                snprintf(command + strlen(command), sizeof(command) - strlen(command), " -warp %02d ", map);
-            }
-        }
+            snprintf(command + strlen(command), sizeof(command) - strlen(command), " +map %s ", mapLabels[mapSelected]);
+ //       sscanf(mapLabels[mapSelected], "e%dm%d", &episode, &map);
+ //       if (episode > 0 && map > 0) {
+ //           snprintf(command + strlen(command), sizeof(command) - strlen(command), " -warp %d %d ", episode, map);
+ //       } else {
+ //           sscanf(mapLabels[mapSelected], "MAP%02d", &map);
+ //           if (map > 0) {
+ //               snprintf(command + strlen(command), sizeof(command) - strlen(command), " -warp %02d ", map);
+ //           }
+ //       }
 
     // Selected Skill
         if (skillSelected != -1) {
