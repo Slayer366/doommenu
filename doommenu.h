@@ -49,6 +49,8 @@ static int screenh = 320;
 
 #define SKILL_LEVEL 5
 
+#define MAX_BOT_OPTIONS 17
+
 const char *skillLabels[SKILL_LEVEL] = {
     "I'm too young to die",
     "Hey, not too rough",
@@ -60,6 +62,26 @@ const char *skillLabels[SKILL_LEVEL] = {
 const char *noLevelWarpLabel = "No Level Warp";
 const char *mapLabels[MAX_EPISODES * MAX_MAPS_PER_EPISODE + MAX_D2_MAPS] = {
     "No Level Warp"
+};
+
+const char* botOptions[MAX_BOT_OPTIONS] = {
+    "No Bots",
+    "Cooperative, 1 Bot",
+    "Cooperative, 2 Bots",
+    "Cooperative, 3 Bots",
+    "Cooperative, 4 Bots",
+    "Cooperative, 5 Bots",
+    "Cooperative, 6 Bots",
+    "Cooperative, 7 Bots",
+    "Cooperative, 8 Bots",
+    "Deathmatch, 1 Bot",
+    "Deathmatch, 2 Bots",
+    "Deathmatch, 3 Bots",
+    "Deathmatch, 4 Bots",
+    "Deathmatch, 5 Bots",
+    "Deathmatch, 6 Bots",
+    "Deathmatch, 7 Bots",
+    "Deathmatch, 8 Bots",
 };
 
 char **files = NULL;

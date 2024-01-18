@@ -253,6 +253,8 @@ void runCommand(const char *command) {
     system("pkill -f gptokeyb");
     system("sudo kill -9 $(pidof gptokeyb)");
     system("kill -9 $(pidof gptokeyb)");
+    system("cp bots.cfg ~/.config/lzdoom/bots.cfg");
+    system("cp bots.cfg ~/.config/gzdoom/bots.cfg");
 
     pid_t pid = fork();
 
@@ -612,6 +614,51 @@ while(in_loop) {
 
 
 
+// Bot selection loop
+
+int botSelected = 0;
+int numBots = MAX_BOT_OPTIONS;
+
+in_loop = true;
+while(in_loop) { 
+    int key;
+
+    while (1) {
+        key = handleEvents();
+        if (key == 0) {
+            // No more events
+            break;
+        }
+
+        if (key == SDLK_RETURN) {
+            in_loop = false;
+            break; // Exit loop on Enter key
+        }
+
+        switch (key) {
+            case SDLK_UP:
+                VAR_DEC(botSelected, 1, numBots);
+                break;
+            case SDLK_DOWN:
+                VAR_INC(botSelected, 1, numBots);
+                break;
+            case SDLK_PAGEUP:
+                botSelected = max(0, botSelected - SCROLL_SIZE);
+                break;
+            case SDLK_PAGEDOWN:
+                botSelected = min(numBots - 1, botSelected + SCROLL_SIZE);
+                break;
+            case SDLK_ESCAPE:
+                SDL_Quit();
+                exit(0);
+                break;
+        }
+    }
+    displayMenu(renderer, botOptions, numBots, botSelected, "Add Bots ( if using level warp ):", 0);
+    SDL_Delay(35);
+}
+
+
 // Display the command based on the selected source port
 // strstr -> strcasestr courtesy of @kloptops
 if (sourcePortSelected < numSourcePorts) {
@@ -655,6 +702,24 @@ if (sourcePortSelected < numSourcePorts) {
     // Display skill level
         if (skillSelected != -1) {
             printf(" +set skill %d ", skillSelected);
+        }
+
+    // Cooperative with bots
+        if (strstr(botOptions[botSelected], "Cooperative") != NULL) {
+            numBots = atoi(&botOptions[botSelected][strlen("Cooperative, ")]);
+            printf(" -cooperative +wait 42\\;");
+            for (int i = 0; i < numBots; i++) {
+                printf("addbot\\;");
+            }
+        }
+
+    // Deathmatch with bots
+        if (strstr(botOptions[botSelected], "Deathmatch") != NULL) {
+            numBots = atoi(&botOptions[botSelected][strlen("Deathmatch, ")]);
+            printf(" -nomonsters -deathmatch +wait 42\\;");
+            for (int i = 0; i < numBots; i++) {
+                printf("addbot\\;");
+            }
         }
 
     printf("\n");
@@ -706,6 +771,24 @@ if (sourcePortSelected < numSourcePorts) {
     // Selected Skill
         if (skillSelected != -1) {
             snprintf(command + strlen(command), sizeof(command) - strlen(command), " +set skill %d ", skillSelected);
+        }
+
+    // Cooperative with bots
+        if (strstr(botOptions[botSelected], "Cooperative") != NULL) {
+            numBots = atoi(&botOptions[botSelected][strlen("Cooperative, ")]);
+            snprintf(command + strlen(command), sizeof(command) - strlen(command), " -cooperative +wait 42\\;");
+            for (int i = 0; i < numBots; i++) {
+                snprintf(command + strlen(command), sizeof(command) - strlen(command), "addbot\\;");
+            }
+        }
+
+    // Deathmatch with bots
+        if (strstr(botOptions[botSelected], "Deathmatch") != NULL) {
+            numBots = atoi(&botOptions[botSelected][strlen("Deathmatch, ")]);
+            snprintf(command + strlen(command), sizeof(command) - strlen(command), " -nomonsters -deathmatch +wait 42\\;");
+            for (int i = 0; i < numBots; i++) {
+                snprintf(command + strlen(command), sizeof(command) - strlen(command), "addbot\\;");
+            }
         }
 
     // Run the command
