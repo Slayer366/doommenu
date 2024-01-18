@@ -81,7 +81,7 @@ const char* botOptions[MAX_BOT_OPTIONS] = {
     "Deathmatch, 5 Bots",
     "Deathmatch, 6 Bots",
     "Deathmatch, 7 Bots",
-    "Deathmatch, 8 Bots",
+    "Deathmatch, 8 Bots"
 };
 
 char **files = NULL;
