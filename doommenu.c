@@ -529,7 +529,7 @@ while(in_loop) {
 // Map selection loop
 initializeMapLabels();
 
-int numMaps = MAX_EPISODES * MAX_MAPS_PER_EPISODE + MAX_D2_MAPS;
+int numMaps = MAX_EPISODES * MAX_MAPS_PER_EPISODE + MAX_D2_MAPS + 1;
 int mapSelected = 0;
 //int episode, map;
 
