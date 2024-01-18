@@ -60,7 +60,7 @@ const char *skillLabels[SKILL_LEVEL] = {
 };
 
 const char *noLevelWarpLabel = "No Level Warp";
-const char *mapLabels[MAX_EPISODES * MAX_MAPS_PER_EPISODE + MAX_D2_MAPS] = {
+const char *mapLabels[MAX_EPISODES * MAX_MAPS_PER_EPISODE + MAX_D2_MAPS + 1] = {
     "No Level Warp"
 };
 
