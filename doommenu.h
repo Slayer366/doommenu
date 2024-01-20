@@ -102,9 +102,10 @@ instead of several to accomodate case sensitivity - courtesy of @kloptops
 
 const char *iwads[] = {
     "doom.wad", "doom2.wad", "plutonia.wad", "tnt.wad", "chex quest 3.wad",
-    "chex.wad", "chex3.wad", "heretic.wad", "hexen.wad", "freedoom.pk3",
-    "strife1.wad", "hacx.wad", "freedm.wad", "freedoom1.wad", "freedoom2.wad",
-    "freedoom.wad"
+    "chex.wad", "chex3.wad", "heretic.wad", "hexen.wad", "strife1.wad",
+    "hacx.wad", "freedoom.pk3", "freedm.wad", "freedoom1.wad", "freedoom2.wad",
+    "freedoom.wad", "doom1.wad", "doom2f.wad", "heretic1.wad", "strife0.wad",
+    "hacxsw.wad"
 };
 
 int numPWADs = 0;
