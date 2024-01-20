@@ -392,6 +392,12 @@ while(in_loop) {
             case SDLK_DOWN:
                 VAR_INC(iwadSelected, 1, numValidIWADs);
                 break;
+            case SDLK_PAGEUP:
+                    iwadSelected = max(0, iwadSelected - SCROLL_SIZE);
+                break;
+            case SDLK_PAGEDOWN:
+                    iwadSelected = min(numValidIWADs - 1, iwadSelected + SCROLL_SIZE);
+                break;
             case SDLK_ESCAPE:
                 SDL_Quit();
                 exit(0);
