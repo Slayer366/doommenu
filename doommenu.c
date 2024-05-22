@@ -24,6 +24,23 @@ int handleEvents() {
                 case SDLK_ESCAPE:
                     return SDLK_ESCAPE;
             }
+        } else if (event.type == SDL_CONTROLLERBUTTONDOWN) {
+            // Handle controller events
+            switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    return SDLK_UP;
+                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    return SDLK_DOWN;
+                case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                    return SDLK_PAGEUP;
+                case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                    return SDLK_PAGEDOWN;
+                case SDL_CONTROLLER_BUTTON_A:
+                case SDL_CONTROLLER_BUTTON_B:
+                    return SDLK_RETURN;
+                case SDL_CONTROLLER_BUTTON_BACK:
+                    return SDLK_ESCAPE;
+            }
         }
     }
     return 0;
@@ -204,7 +221,26 @@ void renderText(SDL_Renderer *renderer, TTF_Font *font, const char *text, int x,
 }
 
 // Function to display a menu with existing files
-void displayMenu(SDL_Renderer *renderer, const char **options, int numOptions, int selected, const char *title, int start) {
+void displayMenu(SDL_Renderer *renderer, const char **options, int numOptions, int selected, const char *title, int *displayStart) {
+    int displayEnd = *displayStart + DISPLAY_HEIGHT;
+
+    // Adjust the display end index to prevent going beyond the array bounds
+    if (displayEnd > numOptions) {
+        displayEnd = numOptions;
+    }
+
+    // Make sure selected doesn't poop on its butt
+    if (selected < 0) {
+        selected = 0;
+    }
+
+    // Adjust displayStart based on the selected index
+    if (selected < *displayStart) {
+        *displayStart = selected;
+    } else if (selected >= *displayStart + DISPLAY_HEIGHT) {
+        *displayStart = selected - DISPLAY_HEIGHT + 1;
+    }
+
     // Clear the screen
     //SDL_SetRenderDrawColor(renderer, 48, 8, 0, 255); // Dark Red
     SDL_SetRenderDrawColor(renderer, 56, 56, 56, 255); // Gray
@@ -213,22 +249,16 @@ void displayMenu(SDL_Renderer *renderer, const char **options, int numOptions, i
     // Render title
     renderText(renderer, font, title, 10, 10, 224, 210, 112); // Yellow
 
-    int displayStart = (selected >= DISPLAY_HEIGHT) ? selected - DISPLAY_HEIGHT + 1 : 0;
-    int displayEnd = displayStart + DISPLAY_HEIGHT;
-
-    // Adjust the display end index to prevent going beyond the array bounds
-    displayEnd = (displayEnd > numOptions) ? numOptions : displayEnd;
-
     // Render options
-        for (int i = displayStart; i < displayEnd; i++) {
+        for (int i = *displayStart; i < displayEnd; i++) {
             if (i == selected) {
             // Highlight the selected option
             SDL_SetRenderDrawColor(renderer, 0, 0, 128, 255); // Dark Blue
-            SDL_Rect rect = {10, 31 + (i - displayStart) * 20, screenw - 40, 20};
+            SDL_Rect rect = {10, 31 + (i - *displayStart) * 20, screenw - 40, 20};
             SDL_RenderFillRect(renderer, &rect);
         }
         //renderText(renderer, font, options[i], 20, 30 + (i - displayStart) * 20, 224, 224, 224); // Dim White
-        renderText(renderer, font, options[i], 20, 30 + (i - displayStart) * 20, 224, 8, 8); // Dark Red
+        renderText(renderer, font, options[i], 20, 30 + (i - *displayStart) * 20, 224, 8, 8); // Dark Red
     }
     SDL_RenderPresent(renderer);
 }
@@ -250,9 +280,9 @@ int compareStrings(const void *a, const void *b) {
 */
 void runCommand(const char *command) {
 
-    system("pkill -f gptokeyb");
-    system("sudo kill -9 $(pidof gptokeyb)");
-    system("kill -9 $(pidof gptokeyb)");
+    //system("pkill -f gptokeyb");
+    //system("sudo kill -9 $(pidof gptokeyb)");
+    //system("kill -9 $(pidof gptokeyb)");
     system("cp bots.cfg ~/.config/lzdoom/bots.cfg");
     system("cp bots.cfg ~/.config/gzdoom/bots.cfg");
 
@@ -285,8 +315,13 @@ void runCommand(const char *command) {
 // The main program loop
 int main() {
 
+    const char *gp2keyb = getenv("GPTOKEYB");
+    if (!gp2keyb) {
+        fprintf(stderr, "Warning: GPTOKEYB environment variable not found or not set.\n");
+    }
+
     // Initialize SDL2
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
         fprintf(stderr, "SDL2 initialization failed: %s\n", SDL_GetError());
         return 1;
     }
@@ -308,8 +343,29 @@ int main() {
     font = TTF_OpenFont("DooM.ttf", 14);
     if (!font) {
         fprintf(stderr, "Error loading font: %s\n", TTF_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        TTF_Quit();
+        SDL_Quit();
         return 1;
     }
+
+    // Open the first available game controller
+    SDL_GameController *controller = NULL;
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i)) {
+            controller = SDL_GameControllerOpen(i);
+            if (controller) {
+                printf("Game controller connected: %s\n", SDL_GameControllerName(controller));
+                break;
+            }
+        }
+    }
+
+    if (!controller) {
+        printf("Warning: No game controller found.\n");
+    }
+
 
     detectExecutables();
 
@@ -326,6 +382,7 @@ int main() {
     int firstpwadSelected = -1;
     int secondpwadSelected = -1;
     int thirdpwadSelected = -1;
+    int displayStart = 0;
 
 /* Improved event handling, removed redundancies, added boolean operator - courtesy of @kloptops */
 
@@ -361,9 +418,11 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, (const char **)files, numSourcePorts, sourcePortSelected, "Select a Doom Source Port:", 0);
+    displayMenu(renderer, (const char **)files, numSourcePorts, sourcePortSelected, "Select a Doom Source Port:", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
+
+    displayStart = 0;
     detectValidIWADs(".");
 
     // Sort the valid IWADs
@@ -404,10 +463,11 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, validIWADs, numValidIWADs, iwadSelected, "Select an IWAD:", 0);
+    displayMenu(renderer, validIWADs, numValidIWADs, iwadSelected, "Select an IWAD:", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
 
+    displayStart = 0;
 // Detect valid PWADs & Sort the PWAD options for all PWAD selection screens and display 1st PWAD selection menu
     detectValidPWADs(".");
 
@@ -448,10 +508,11 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, pwadOptions, numPWADs, firstpwadSelected, "Select 1st optional PWAD (1 of 3):", 0);
+    displayMenu(renderer, pwadOptions, numPWADs, firstpwadSelected, "Select 1st optional PWAD (1 of 3):", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
 
+    displayStart = 0;
 // Display 2nd PWAD selection menu
 in_loop = true;
 while(in_loop) { 
@@ -488,10 +549,11 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, pwadOptions, numPWADs, secondpwadSelected, "Select 2nd optional PWAD (2 of 3):", 0);
+    displayMenu(renderer, pwadOptions, numPWADs, secondpwadSelected, "Select 2nd optional PWAD (2 of 3):", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
 
+    displayStart = 0;
 // Display 3rd PWAD selection menu
 in_loop = true;
 while(in_loop) { 
@@ -528,10 +590,11 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, pwadOptions, numPWADs, thirdpwadSelected, "Select 3rd optional PWAD (3 of 3):", 0);
+    displayMenu(renderer, pwadOptions, numPWADs, thirdpwadSelected, "Select 3rd optional PWAD (3 of 3):", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
 
+    displayStart = 0;
 // Map selection loop
 initializeMapLabels();
 
@@ -574,11 +637,12 @@ while (in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, mapLabels, numMaps, mapSelected, "Level Warp ( e#m# = Doom, MAP## = Doom II ):", 0);
+    displayMenu(renderer, mapLabels, numMaps, mapSelected, "Level Warp ( e#m# = Doom, MAP## = Doom II ):", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
 
 
+    displayStart = 0;
 // Skill/Difficulty selection loop
 displaySkillMenu();
 
@@ -614,12 +678,12 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, skillLabels, numSkills, skillSelected, "Select Skill ( if using level warp ):", 0);
+    displayMenu(renderer, skillLabels, numSkills, skillSelected, "Select Skill ( if using level warp ):", &displayStart);
     SDL_Delay(35); // Moved displayMenu function call and added SDL_Delay to reduce unnecessary CPU usage - courtesy of @kloptops
 }
 
 
-
+    displayStart = 0;
 // Bot selection loop
 
 int botSelected = 0;
@@ -660,15 +724,21 @@ while(in_loop) {
                 break;
         }
     }
-    displayMenu(renderer, botOptions, numBots, botSelected, "Add Bots ( if using level warp ):", 0);
+    displayMenu(renderer, botOptions, numBots, botSelected, "Add Bots ( if using level warp ):", &displayStart);
     SDL_Delay(35);
 }
 
 
 // Display the command based on the selected source port
 // strstr -> strcasestr courtesy of @kloptops
+
 if (sourcePortSelected < numSourcePorts) {
-    printf("%s ", files[sourcePortSelected]);
+
+        if (gp2keyb) {
+            printf("%s %s & %s ", gp2keyb, files[sourcePortSelected], files[sourcePortSelected]);
+        } else {
+            printf("%s ", files[sourcePortSelected]);
+        }
 
     // Additional parameters for gzDoom
         if (strcasestr(files[sourcePortSelected], gzDoomExecutable) != NULL) {
@@ -694,7 +764,7 @@ if (sourcePortSelected < numSourcePorts) {
         }
 
     // Display selected map
-	printf("+map %s ", mapLabels[mapSelected]);
+            printf("+map %s ", mapLabels[mapSelected]);
 //        sscanf(mapLabels[mapSelected], "e%dm%d", &episode, &map);
 //        if (episode > 0 && map > 0) {
 //            printf("-warp %d %d ", episode, map);
@@ -736,7 +806,11 @@ if (sourcePortSelected < numSourcePorts) {
     char command[4096]; // Adjust the size based on your needs
 
     // Append the source port
-        snprintf(command, sizeof(command), "%s", files[sourcePortSelected]);
+    if (gp2keyb) {
+        snprintf(command, sizeof(command), "%s %s & %s ", gp2keyb, files[sourcePortSelected], files[sourcePortSelected]);
+    } else {
+        snprintf(command, sizeof(command), "%s ", files[sourcePortSelected]);
+    }
 
     // Additional parameters for gzDoom
     // strstr -> strcasestr courtesy of @kloptops
@@ -796,6 +870,9 @@ if (sourcePortSelected < numSourcePorts) {
                 snprintf(command + strlen(command), sizeof(command) - strlen(command), "addbot\\;");
             }
         }
+
+    // Print the final command string
+        printf("\nCommand output:\n\n %s \n\n", command);
 
     // Run the command
         runCommand(command);

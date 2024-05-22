@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include <SDL2/SDL.h>
 
 #include <SDL2/SDL_ttf.h>
