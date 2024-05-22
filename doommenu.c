@@ -229,7 +229,7 @@ void displayMenu(SDL_Renderer *renderer, const char **options, int numOptions, i
         displayEnd = numOptions;
     }
 
-    // Make sure selected doesn't poop on its butt
+    // Make sure selected doesn't fall below 0
     if (selected < 0) {
         selected = 0;
     }
